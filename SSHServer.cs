@@ -7,7 +7,7 @@ namespace SSHServer.NET
 	public class SSHServer : BackgroundService
 	{
 		private TcpListener _listener;
-		private string _serverBanner = "SSH-2.0-SSHServer.NET_0.1";
+		private readonly string _serverBanner = "SSH-2.0-SSHServer.NET_0.1";
 
 		public override Task StartAsync(CancellationToken cancellationToken)
 		{
@@ -37,8 +37,7 @@ namespace SSHServer.NET
 			using (client)
 			{
 				SSHSession session = new(client);
-				await session.WriteServerBanner(_serverBanner, cancellationToken);
-				await session.ReadClientBanner();
+				await session.ReceiveConnection(_serverBanner, cancellationToken);
 			}
 		}
 
