@@ -55,19 +55,19 @@ namespace SSHServer.NET.Messages
 
 		protected override void OnGetPacket(SSHDataWriter writer)
 		{
-			writer.WriteBytes(Cookie);
-			writer.Write(string.Join(",", KeyExchangeAlgorithms), Encoding.ASCII);
-			writer.Write(string.Join(",", ServerHostKeyAlgorithms), Encoding.ASCII);
-			writer.Write(string.Join(",", EncryptionAlgorithmsClientToServer), Encoding.ASCII);
-			writer.Write(string.Join(",", EncryptionAlgorithmsServerToClient), Encoding.ASCII);
-			writer.Write(string.Join(",", MacAlgorithmsClientToServer), Encoding.ASCII);
-			writer.Write(string.Join(",", MacAlgorithmsServerToClient), Encoding.ASCII);
-			writer.Write(string.Join(",", CompressionAlgorithmsClientToServer), Encoding.ASCII);
-			writer.Write(string.Join(",", CompressionAlgorithmsServerToClient), Encoding.ASCII);
-			writer.Write(string.Join(",", LanguagesClientToServer), Encoding.ASCII);
-			writer.Write(string.Join(",", LanguagesServerToClient), Encoding.ASCII);
-			writer.Write(FirstKexPacketFollows);
-			writer.Write(Reserved);
+			writer.WriteBytes(Cookie)
+				.WriteString(string.Join(",", KeyExchangeAlgorithms), Encoding.ASCII)
+				.WriteString(string.Join(",", ServerHostKeyAlgorithms), Encoding.ASCII)
+				.WriteString(string.Join(",", EncryptionAlgorithmsClientToServer), Encoding.ASCII)
+				.WriteString(string.Join(",", EncryptionAlgorithmsServerToClient), Encoding.ASCII)
+				.WriteString(string.Join(",", MacAlgorithmsClientToServer), Encoding.ASCII)
+				.WriteString(string.Join(",", MacAlgorithmsServerToClient), Encoding.ASCII)
+				.WriteString(string.Join(",", CompressionAlgorithmsClientToServer), Encoding.ASCII)
+				.WriteString(string.Join(",", CompressionAlgorithmsServerToClient), Encoding.ASCII)
+				.WriteString(string.Join(",", LanguagesClientToServer), Encoding.ASCII)
+				.WriteString(string.Join(",", LanguagesServerToClient), Encoding.ASCII)
+				.WriteBool(FirstKexPacketFollows)
+				.WriteUInt(Reserved);
 		}
 	}
 }
