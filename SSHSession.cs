@@ -19,11 +19,7 @@ namespace SSHServer.NET
 
 		public async Task WriteServerBanner(string banner, CancellationToken cancellationToken)
 		{
-			if (banner.EndsWith("\r\n"))
-			{
-				banner = banner.Trim('\r', '\n');
-			}
-			await _writerStream.WriteLineAsync(banner);
+			await _writerStream.WriteLineAsync(banner.Trim('\r', '\n'));
 		}
 
 		public async Task ReadClientBanner()
