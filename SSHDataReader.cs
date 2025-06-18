@@ -2,15 +2,10 @@
 
 namespace SSHServer.NET
 {
-	public class SSHDataReader
+	public class SSHDataReader(ReadOnlyMemory<byte> bytes)
 	{
-		private readonly ReadOnlyMemory<byte> _bytes;
+		private readonly ReadOnlyMemory<byte> _bytes = bytes;
 		private int _position;
-
-		public SSHDataReader(ReadOnlyMemory<byte> bytes)
-		{
-			_bytes = bytes;
-		}
 
 		public bool ReadBoolean()
 		{
@@ -50,6 +45,11 @@ namespace SSHServer.NET
 		public byte[] ReadBytes(int length)
 		{
 			return ReadBytesAsMemory(length).ToArray();
+		}
+
+		public byte[] ReadBinary()
+		{
+			return ReadBinaryAsMemory().ToArray();
 		}
 
 		public string ReadString(Encoding encoding)

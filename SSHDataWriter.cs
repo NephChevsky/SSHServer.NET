@@ -2,38 +2,58 @@
 
 namespace SSHServer.NET
 {
-	public class SSHDataWriter
+	public class SSHDataWriter(int expectedCapacity = 4096)
 	{
-		private readonly MemoryStream _ms;
+		private readonly MemoryStream _ms = new(expectedCapacity);
 
-		public SSHDataWriter(int expectedCapacity = 4096)
-		{
-			_ms = new MemoryStream(expectedCapacity);
-		}
-
-		public SSHDataWriter Write(byte value)
+		public SSHDataWriter WriteByte(byte value)
 		{
 			_ms.WriteByte(value);
 			return this;
 		}
 
-		public SSHDataWriter Write(bool value)
+		public SSHDataWriter WriteBool(bool value)
 		{
 			_ms.WriteByte(value ? (byte)1 : (byte)0);
 			return this;
 		}
 
-		public SSHDataWriter Write(uint value)
+		public SSHDataWriter WriteUInt(uint value)
 		{
-			byte[] bytes = new[] { (byte)(value >> 24), (byte)(value >> 16), (byte)(value >> 8), (byte)(value & 0xFF) };
+			byte[] bytes = [(byte)(value >> 24), (byte)(value >> 16), (byte)(value >> 8), (byte)(value & 0xFF)];
 			_ms.Write(bytes, 0, 4);
 			return this;
 		}
 
-		public SSHDataWriter Write(string str, Encoding encoding)
+		public SSHDataWriter WriteString(string str, Encoding encoding)
 		{
 			byte[] bytes = encoding.GetBytes(str);
 			WriteBinary(bytes);
+			return this;
+		}
+
+		public SSHDataWriter WriteMpint(ReadOnlyMemory<byte> data)
+		{
+			if (data.Length == 1 && data.Span[0] == 0)
+			{
+				WriteBytes(new byte[4]);
+			}
+			else
+			{
+				uint length = (uint)data.Length;
+				bool high = ((data.Span[0] & 0x80) != 0);
+				if (high)
+				{
+					WriteUInt(length + 1);
+					WriteByte(0);
+					WriteBytes(data);
+				}
+				else
+				{
+					WriteUInt(length);
+					WriteBytes(data);
+				}
+			}
 			return this;
 		}
 
@@ -45,7 +65,7 @@ namespace SSHServer.NET
 
 		public SSHDataWriter WriteBinary(ReadOnlyMemory<byte> data)
 		{
-			Write((uint)data.Length);
+			WriteUInt((uint)data.Length);
 			_ms.Write(data.Span);
 			return this;
 		}
