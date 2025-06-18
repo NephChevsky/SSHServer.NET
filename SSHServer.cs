@@ -36,8 +36,8 @@ namespace SSHServer.NET
 		{
 			using (client)
 			{
-				SSHSession session = new(client);
-				await session.ReceiveConnection(_serverBanner, cancellationToken);
+				SSHSession session = new(client, _serverBanner);
+				await session.ReceiveConnection(cancellationToken);
 			}
 		}
 

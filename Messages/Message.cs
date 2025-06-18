@@ -21,7 +21,7 @@
 		public byte[] GetPacket()
 		{
 			SSHDataWriter writer = new();
-			writer.Write(MessageType);
+			writer.WriteByte(MessageType);
 
 			OnGetPacket(writer);
 

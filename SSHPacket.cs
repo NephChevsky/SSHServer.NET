@@ -71,7 +71,7 @@ namespace SSHServer.NET
 			int read = 0;
 			while (read < count)
 			{
-				int bytesRead = await stream.ReadAsync(buffer, offset + read, count - read, cancellationToken);
+				int bytesRead = await stream.ReadAsync(buffer.AsMemory(offset + read, count - read), cancellationToken);
 				if (bytesRead == 0)
 					throw new EndOfStreamException("Unexpected end of SSH stream");
 				read += bytesRead;

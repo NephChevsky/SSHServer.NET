@@ -5,29 +5,25 @@ using System.Threading;
 
 namespace SSHServer.NET
 {
-	public class SSHSession
+	public class SSHSession(TcpClient client, string serverBanner)
 	{
-		private readonly NetworkStream _networkStream;
+		private readonly NetworkStream _networkStream = client.GetStream();
 
 		private string _clientBanner;
+		private readonly string _serverBanner = serverBanner;
 
-		public SSHSession(TcpClient client)
+		public async Task ReceiveConnection(CancellationToken cancellationToken)
 		{
-			_networkStream = client.GetStream();
-		}
+			await ExchangeBanners(cancellationToken);
 
-		public async Task ReceiveConnection(string serverBanner, CancellationToken cancellationToken)
-		{
-			await ExchangeServerBanner(serverBanner, cancellationToken);
-
-			await ExchangeKeyInit(cancellationToken);
+			await ExchangeKeys(cancellationToken);
 
 			
 		}
 
-		public async Task ExchangeServerBanner(string serverBanner, CancellationToken cancellationToken)
+		private async Task ExchangeBanners(CancellationToken cancellationToken)
 		{
-			string formatted = serverBanner.Trim('\r', '\n') + "\r\n";
+			string formatted = _serverBanner.Trim('\r', '\n') + "\r\n";
 			byte[] data = Encoding.ASCII.GetBytes(formatted);
 			await _networkStream.WriteAsync(data, cancellationToken);
 			await _networkStream.FlushAsync(cancellationToken);
@@ -60,7 +56,7 @@ namespace SSHServer.NET
 				}
 			}
 
-			_clientBanner = Encoding.ASCII.GetString(buffer.ToArray());
+			_clientBanner = Encoding.ASCII.GetString([.. buffer]);
 
 			if (!_clientBanner.StartsWith("SSH-2.0-"))
 			{
@@ -69,16 +65,16 @@ namespace SSHServer.NET
 			}
 		}
 
-		public async Task ExchangeKeyInit(CancellationToken cancellationToken)
+		private async Task ExchangeKeys(CancellationToken cancellationToken)
 		{
-			KeyExchangeInitMessage kexInit = new();
-			byte[] payload = kexInit.GetPacket();
+			KeyExchangeInitMessage serverKeyExchangeInit = new();
+			byte[] payload = serverKeyExchangeInit.GetPacket();
 			byte[] packet = SSHPacket.WrapUnencrypted(payload);
 			await _networkStream.WriteAsync(packet, cancellationToken);
 
 			SSHPacket receivedPacket = await SSHPacket.ReadAsync(_networkStream, cancellationToken);
-			KeyExchangeInitMessage clientKexInit = new();
-			clientKexInit.Load(receivedPacket.Payload);
+			KeyExchangeInitMessage clientKeyExchangeInit = new();
+			clientKeyExchangeInit.Load(receivedPacket.Payload);
 		}
 	}
 }
