@@ -75,6 +75,28 @@ namespace SSHServer.NET
 			SSHPacket receivedPacket = await SSHPacket.ReadAsync(_networkStream, cancellationToken);
 			KeyExchangeInitMessage clientKeyExchangeInit = new();
 			clientKeyExchangeInit.Load(receivedPacket.Payload);
+
+			string keyExchangeAlgorithm = SelectAlgorithm([.. serverKeyExchangeInit.KeyExchangeAlgorithms], [.. clientKeyExchangeInit.KeyExchangeAlgorithms]);
+
+			if (string.IsNullOrEmpty(keyExchangeAlgorithm))
+			{
+				throw new Exception("Failed to retrieve a common algorithm between server and client");
+			}
+			if (keyExchangeAlgorithm == "curve25519-sha256")
+			{
+			}
+		}
+
+		private string SelectAlgorithm(List<string> serverAlgorithms, List<string> clientAlgorithms)
+		{
+			foreach (string algorithm in serverAlgorithms)
+			{
+				if (clientAlgorithms.Contains(algorithm))
+				{
+					return algorithm;
+				}
+			}
+			return null;
 		}
 	}
 }
