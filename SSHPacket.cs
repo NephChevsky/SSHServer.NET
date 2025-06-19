@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Buffers.Binary;
+using System.Net;
 using System.Security.Cryptography;
 
 namespace SSHServer.NET
@@ -43,25 +44,32 @@ namespace SSHServer.NET
 
 			await ReadExactAsync(stream, buffer, 0, 5, cancellationToken);
 
-			int packetLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(buffer, 0));
+			Console.WriteLine($"buffer: {BitConverter.ToString(buffer)}");
+
+			int packetLength = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(0, 4));
 			if (packetLength < 0 || packetLength > 35000)
 				throw new InvalidDataException($"Invalid packet length: {packetLength}");
 
 			byte paddingLength = buffer[4];
-			int payloadLength = packetLength - paddingLength - 1;
 
+			int payloadLength = packetLength - paddingLength - 1;
 			if (payloadLength < 0)
 				throw new InvalidDataException($"Invalid padding length: {paddingLength}");
 
-			byte[] packetBody = new byte[packetLength];
-			await ReadExactAsync(stream, packetBody, 0, packetLength, cancellationToken);
+			Console.WriteLine($"packetLength={packetLength}, paddingLength={paddingLength}, payloadLength={payloadLength}");
 
 			byte[] payload = new byte[payloadLength];
-			Buffer.BlockCopy(packetBody, 0, payload, 0, payloadLength);
+			await ReadExactAsync(stream, payload, 0, payloadLength, cancellationToken);
+
+			Console.WriteLine($"SSH message type: {payload[0]}");
+
+			byte[] padding = new byte[paddingLength];
+			await ReadExactAsync(stream, padding, 0, paddingLength, cancellationToken);
 
 			byte[] fullPacket = new byte[4 + 1 + packetLength];
 			Buffer.BlockCopy(buffer, 0, fullPacket, 0, 5);
-			Buffer.BlockCopy(packetBody, 0, fullPacket, 5, packetLength);
+			Buffer.BlockCopy(payload, 0, fullPacket, 5, payloadLength);
+			Buffer.BlockCopy(padding, 0, fullPacket, 5 + payloadLength, paddingLength);
 
 			return new SSHPacket(payload, fullPacket);
 		}

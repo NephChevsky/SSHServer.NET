@@ -84,6 +84,7 @@ namespace SSHServer.NET
 			}
 			if (keyExchangeAlgorithm == "curve25519-sha256")
 			{
+				SSHPacket clientECDHInitPacket = await SSHPacket.ReadAsync(_networkStream, cancellationToken);
 			}
 		}
 
