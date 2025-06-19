@@ -90,7 +90,7 @@ namespace SSHServer.NET
 			}
 		}
 
-		private string SelectAlgorithm(List<string> serverAlgorithms, List<string> clientAlgorithms)
+		private static string SelectAlgorithm(List<string> serverAlgorithms, List<string> clientAlgorithms)
 		{
 			foreach (string algorithm in serverAlgorithms)
 			{
