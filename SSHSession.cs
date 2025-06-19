@@ -1,7 +1,13 @@
 ﻿using SSHServer.NET.Messages;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
+using System.Security.Cryptography;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Crypto.Prng;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Agreement;
 
 namespace SSHServer.NET
 {
@@ -87,6 +93,15 @@ namespace SSHServer.NET
 				SSHPacket clientECDHInitPacket = await SSHPacket.ReadAsync(_networkStream, cancellationToken);
 				KeyExchangeECDhInitMessage clientECDHInit = new();
 				clientECDHInit.Load(clientECDHInitPacket.Payload);
+
+				X25519KeyPairGenerator generator = new();
+				generator.Init(new X25519KeyGenerationParameters(new SecureRandom(new CryptoApiRandomGenerator(RandomNumberGenerator.Create()))));
+				AsymmetricCipherKeyPair keyPair = generator.GenerateKeyPair();
+				byte[] serverPublicKey = ((X25519PublicKeyParameters)keyPair.Public).GetEncoded();
+				X25519Agreement agreement = new();
+				agreement.Init(keyPair.Private);
+				byte[] sharedSecret = new byte[32];
+				agreement.CalculateAgreement(new X25519PublicKeyParameters(clientECDHInit.Q, 0), sharedSecret, 0);
 			}
 		}
 
